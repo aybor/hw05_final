@@ -1,0 +1,47 @@
+<!-- templates/about/author.html -->
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Об авторе проекта
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10 py-5">
+      <div class="card">
+        <div class="card-header">
+          <h1 style="text-align: center">
+            Привет!<br>
+            Автор этого сайта - я, Алексей
+          </h1>
+        </div> <!-- card-header -->
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5" style="text-align: center">
+              <img src={% static "/img/author/islands-300.png" %}>
+            </div>
+            <div class="col-7" style="text-align: center">
+              <table style="height: 200px;">
+                <tbody>
+                  <tr>
+                    <td class="align-middle">
+                      Вот он, я!<br>
+                      Молодой, перспективный, на конференции в Черногории в 2013 году :)
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="text-align: center">
+                <p>
+                    А верстать получается не очень.. Надо подучиться!
+                </p>
+            </div>
+          </div>
+        </div> <!-- card-body -->
+      </div> <!-- card -->
+    </div> <!-- col -->
+  </div> <!-- row -->
+</div> <!-- container -->
+{% endblock %} 

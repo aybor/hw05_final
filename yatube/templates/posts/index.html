@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Последние обновления на сайте
+{% endblock  %}
+
+{% block header %}
+  Последние обновления на сайте
+{% endblock %}
+{% block content %}
+<div class="container py-5">
+{% include 'posts/includes/switcher.html' %}
+  <!-- Выводит записи по 10 на страницу -->
+{% include 'posts/includes/posts_list.html' %}
+{% include 'posts/includes/paginator.html' %}
+</div>
+{% endblock %}

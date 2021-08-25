@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+{% load user_filters %}
+
+{% block title %}
+  Пост группы {{ post.group }}
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <aside class="col-12 col-md-3">
+      <ul>
+        {% include 'posts/includes/post_info.html' %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Всего постов автора: <span>{{ author_posts_cnt }}</span>
+        </li>
+      </ul>
+    </aside>          
+    <article class="col-12 col-md-9">
+      {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+        <img class="card-img my-2" src="{{ im.url }}">
+      {% endthumbnail %}
+      <p>{{ post.text|linebreaksbr }}</p>
+        {% if user == post.author %}
+          <div class="d-flex justify-content-end">
+            <form action="{% url 'posts:post_edit' post.id %}">
+              <button type="submit" class="btn btn-primary">
+                Редактировать запись
+              </button>
+            </form>
+          </div>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <div class="card my-4">
+            <h5 class="card-header text-start">Добавить комментарий:</h5>
+            <div class="card-body text-end">
+              <form method="post" action="{% url 'posts:add_comment' post.id %}">
+                {% csrf_token %}      
+                <div class="form-group mb-2 ">
+                  {{ form.text|addclass:'form-control' }}
+                </div>
+                <button type="submit" class="btn btn-primary">Отправить</button>
+              </form>
+            </div>
+          </div>
+        {% endif %}
+
+        {% for comment in comments %}
+          <div class="media mb-4">
+            <div class="media-body">
+              <h5 class="mt-0">
+                <a href="{% url 'posts:profile' comment.author.username %}">
+                  {{ comment.author.username }}
+                </a>
+              </h5>
+              <p>
+                {{ comment.created }}
+              </p>
+              <p>
+                {{ comment.text }}
+              </p>
+            </div>
+          </div>
+        {% endfor %}
+    </article>    
+  </div>
+</div>
+{% endblock %}

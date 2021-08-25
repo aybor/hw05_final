@@ -1,0 +1,17 @@
+<li class="list-group-item">
+  Автор: {{ post.author.get_full_name }} <br>
+  <a href="{% url 'posts:profile' post.author %}">
+    все посты пользователя
+  </a>
+</li>
+<li class="list-group-item">
+Дата публикации: {{ post.pub_date|date:"d E Y" }}
+</li>
+{% if post.group.slug %}
+  <li class="list-group-item">
+    Группа: {{ post.group }} <br>
+  <a href="{% url 'posts:group_posts' post.group.slug %}">
+    все записи группы
+  </a>
+  </li>
+{% endif %}

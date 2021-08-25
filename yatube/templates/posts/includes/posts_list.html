@@ -1,0 +1,25 @@
+<!-- Выводит список записей записи -->
+{% load thumbnail %}
+{% for post in page_obj %}
+  <div class="row">
+
+    <aside class="col-12 col-md-3">
+      <ul class="list-group list-group-flush">
+        {% include 'posts/includes/post_info.html' %}
+        <li class="list-group-item">
+          <a href="{% url 'posts:post_detail' post.id %}">подробная информация </a>
+        </li>
+      </ul>           
+    </aside>
+
+    <article class="col-12 col-md-9">
+      <p>{{ post.text|linebreaksbr }}</p> 
+      {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+        <img class="card-img my-2" src="{{ im.url }}">
+      {% endthumbnail %}   
+    </article>
+
+  </div>
+
+  {% if not forloop.last %}<hr>{% endif %}
+{% endfor %}

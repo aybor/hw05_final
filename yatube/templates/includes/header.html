@@ -1,0 +1,75 @@
+{% load static %}
+
+<header>
+  <nav class="my-navbar my-navbar-light">
+    <div class="my-container">
+      <a class="my-navbar-brand" href="{% url 'posts:index' %}">
+        <img src={% static "img/logo.png" %} width="36" height="36" class="my-d-inline-block" alt="">
+        <div class="my-brand"><span style="color:red">Ya</span>tube</div>
+      </a>
+      {% with request.resolver_match.view_name as view_name %}
+        <ul class="my-header-nav">
+          <li class="my-header-nav-item">
+            <a href="{% url 'about:author' %}" class="my-header-nav-link
+              {% if view_name  == 'about:author' %}
+              my-link-active
+              {% endif %}">
+              Об авторе
+            </a>
+          </li>
+          <li class="my-header-nav-item">
+            <a href="{% url 'about:tech' %}" class="my-header-nav-link
+              {% if view_name  == 'about:tech' %}
+              my-link-active
+            {% endif %}">
+              Технологии
+            </a>
+          </li>
+          {% if user.is_authenticated %}              
+            <li class="my-header-nav-item">
+              <a href="{% url 'posts:post_create' %}" class="my-header-nav-link
+                {% if view_name  == 'posts:post_create'%}
+                my-link-active
+                {% elif view_name  == 'posts:post_edit'%}
+                my-link-active
+                {% endif %}">
+                Новая запись
+              </a>
+            </li>
+            <li class="my-header-nav-item">
+              <a href="{% url 'users:password_change' %}" class="my-header-nav-link my-header-nav-link-white
+                {% if view_name  == 'users:password_change' %}
+                my-link-active
+                {% endif %}">
+                Изменить пароль
+              </a>
+            </li>
+            <li class="my-header-nav-item">
+              <a href="{% url 'users:logout' %}" class="my-header-nav-link my-header-nav-link-white">Выйти</a>
+            </li>
+            <li class="my-header-nav-item">
+              Пользователь: <a href="{% url 'posts:profile' user.username %}">
+                                {{ user.username }}
+                            </a>
+            </li>
+          {% else %}
+            <li class="my-header-nav-item">
+              <a href="{% url 'users:login' %}" class="my-header-nav-link my-header-nav-link-white
+                {% if view_name  == 'users:login' %}
+                my-link-active
+                {% endif %}">
+                Войти
+              </a>
+            <li class="my-header-nav-item">
+              <a href="{% url 'users:signup' %}" class="my-header-nav-link my-header-nav-link-white
+                {% if view_name  == 'users:signup' %}
+                my-link-active
+                {% endif %}">
+                Регистрация
+              </a>
+          {% endif %}
+        </ul>        
+      {% endwith %}
+    </div>
+  </nav>
+</header>
