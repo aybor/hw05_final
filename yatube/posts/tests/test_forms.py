@@ -20,23 +20,39 @@ class PostCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='auth')
+
+        cls.user_username = 'auth'
+        cls.test_title_group1 = 'Тестовая группа'
+        cls.test_slug_group1 = 'test_slug'
+        cls.test_description_group1 = 'Тестовое описание'
+        cls.test_title_group2 = 'Тестовая группа для формы'
+        cls.test_slug_group2 = 'test_slug_form'
+        cls.test_description_group2 = 'Тестовое описание для формы'
+        cls.test_text = 'Тестовый текст'
+        cls.test_form_text = 'Тестовый тескт для формы'
+        cls.corrected_form_text = 'Исправленный текст'
+        cls.guest_form_text = 'Тескт для гостевого клиента'
+        cls.test_comment_text = 'Тестовый комментарий'
+
+        cls.user = User.objects.create_user(username=cls.user_username)
+
         cls.group1 = Group.objects.create(
-            title='Тестовая группа',
-            slug='test_slug',
-            description='Тестовое описание',
+            title=cls.test_title_group1,
+            slug=cls.test_slug_group1,
+            description=cls.test_description_group1,
         )
         cls.group2 = Group.objects.create(
-            title='Тестовая группа для формы',
-            slug='test_slug_form',
-            description='Тестовое описание для формы',
+            title=cls.test_title_group2,
+            slug=cls.test_slug_group2,
+            description=cls.test_description_group2,
         )
 
-        Post.objects.create(
+        cls.post_id = Post.objects.create(
             author=cls.user,
-            text='Тестовый текст',
+            text=cls.test_text,
             group=cls.group1
-        )
+        ).pk
+
         cls.form = PostForm()
 
         cls.small_gif = (
@@ -54,29 +70,26 @@ class PostCreateFormTests(TestCase):
             content_type='image/gif'
         )
 
-        cls.test_form_text = 'Тестовый тескт для формы'
-        cls.corrected_form_text = 'Исправленный текст'
-        cls.guest_form_text = 'Тескт для гостевого клиента'
-        cls.test_comment_text = 'Тестовый комментарий'
-
         cls.post_create_url = reverse('posts:post_create')
         cls.after_create_url = reverse(
             'posts:profile',
-            kwargs={'username': cls.user}
+            kwargs={'username': cls.user_username}
         )
         cls.post_edit_url = reverse(
             'posts:post_edit',
-            kwargs={'post_id': 1}
+            kwargs={'post_id': cls.post_id}
         )
         cls.post_detail_url = reverse(
             'posts:post_detail',
-            kwargs={'post_id': 1}
+            kwargs={'post_id': cls.post_id}
         )
         cls.login_url = reverse('users:login')
-        cls.comment_url = reverse('posts:add_comment', kwargs={'post_id': 1})
+        cls.comment_url = reverse(
+            'posts:add_comment',
+            kwargs={'post_id': cls.post_id})
 
-        cls.add_next_create = '?next=/create/'
-        cls.add_next_comment = '?next=/posts/1/comment/'
+        cls.add_next_create = f'?next={cls.post_create_url}'
+        cls.add_next_comment = f'?next={cls.comment_url}'
 
     @classmethod
     def tearDownClass(cls):
@@ -152,7 +165,7 @@ class PostCreateFormTests(TestCase):
         )
 
     def test_not_create_post_for_guest_client(self):
-        """Проверка отсутствия возможности создания поста неавторизованным
+        """Проверка невозможности создания поста неавторизованным
         клиентом.
         """
         # считаем количество постов

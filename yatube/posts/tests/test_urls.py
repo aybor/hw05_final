@@ -3,6 +3,7 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import Client, TestCase
+from django.urls.base import reverse
 
 from posts.models import Group, Post
 
@@ -19,17 +20,54 @@ class PostsURLTests(TestCase):
            В тестовой группе создаём пост.
         """
         super().setUpClass()
-        cls.user_author = User.objects.create_user(username='auth')
-        cls.user = User.objects.create_user(username='user')
+
+        author_username = 'auth'
+        user_username = 'user'
+        test_group_title = 'Тестовая группа'
+        test_slug = 'test_slug'
+        test_group_description = 'Тестовое описание'
+        test_post_text = 'Тестовый текст'
+
+        cls.user_author = User.objects.create_user(
+            username=author_username
+        )
+        cls.user = User.objects.create_user(
+            username=user_username
+        )
         cls.group = Group.objects.create(
-            title='Тестовая группа',
-            slug='test_slug',
-            description='Тестовое описание',
+            title=test_group_title,
+            slug=test_slug,
+            description=test_group_description,
         )
         cls.post = Post.objects.create(
             author=cls.user_author,
-            text='Тестовая группа',
+            text=test_post_text,
         )
+
+        login_url = reverse('users:login')
+
+        index_url = '/'
+        follow_url = '/follow/'
+        group_url = f'/group/{cls.group.slug}/'
+        profile_url = f'/profile/{cls.user_author.username}/'
+        post_url = f'/posts/{cls.post.pk}/'
+        create_url = '/create/'
+        post_edit_url = f'/posts/{cls.post.pk}/edit/'
+        unexisting_url = '/unexisting_page/'
+
+        follow_redirect_url = f'{login_url}?next={follow_url}'
+        create_redirect_url = f'{login_url}?next={create_url}'
+        post_edit_success_redirect = f'/posts/{cls.post.pk}/'
+        post_edit_guest_redirect = f'{login_url}?next={post_edit_url}'
+
+        index_template = 'posts/index.html'
+        follow_template = index_template
+        group_template = 'posts/group_list.html'
+        profile_template = 'posts/profile.html'
+        post_template = 'posts/post_view.html'
+        create_template = 'posts/create_post.html'
+        post_edit_template = create_template
+        unexisting_template = 'core/404.html'
 
         # Создаём словарь с правами доступа к страницам и темплейтами
         access_response = {
@@ -49,65 +87,65 @@ class PostsURLTests(TestCase):
         }
 
         cls.addresses = {
-            '/': {
+            index_url: {
                 'access_level': access_for_public_pages,
-                'template': 'posts/index.html',
+                'template': index_template,
             },
-            '/follow/': {
+            follow_url: {
                 'access_level': {
                     'author': access_response,
                     'authorized': access_response,
                     'guest': {
                         'status': HTTPStatus.FOUND,
-                        'redirect': '/auth/login/?next=/follow/'
+                        'redirect': follow_redirect_url
                     }
                 },
-                'template': 'posts/index.html',
+                'template': follow_template,
             },
-            '/group/test_slug/': {
+            group_url: {
                 'access_level': access_for_public_pages,
-                'template': 'posts/group_list.html',
+                'template': group_template,
             },
-            '/profile/auth/': {
+            profile_url: {
                 'access_level': access_for_public_pages,
-                'template': 'posts/profile.html',
+                'template': profile_template,
             },
-            '/posts/1/': {
+            post_url: {
                 'access_level': access_for_public_pages,
-                'template': 'posts/post_view.html',
+                'template': post_template,
             },
-            '/create/': {
+            create_url: {
                 'access_level': {
                     'author': access_response,
                     'authorized': access_response,
                     'guest': {
                         'status': HTTPStatus.FOUND,
-                        'redirect': '/auth/login/?next=/create/'
+                        'redirect': create_redirect_url
                     }
                 },
-                'template': 'posts/create_post.html',
+                'template': create_template,
             },
-            '/posts/1/edit/': {
+            post_edit_url: {
                 'access_level': {
                     'author': access_response,
                     'authorized': {
                         'status': HTTPStatus.FOUND,
-                        'redirect': '/posts/1/'
+                        'redirect': post_edit_success_redirect
                     },
                     'guest': {
                         'status': HTTPStatus.FOUND,
-                        'redirect': '/auth/login/?next=/posts/1/edit/'
+                        'redirect': post_edit_guest_redirect
                     },
                 },
-                'template': 'posts/create_post.html',
+                'template': post_edit_template,
             },
-            '/unexisting_page/': {
+            unexisting_url: {
                 'access_level': {
                     'author': not_found_response,
                     'authorized': not_found_response,
                     'guest': not_found_response,
                 },
-                'template': 'core/404.html',
+                'template': unexisting_template,
             }
         }
 

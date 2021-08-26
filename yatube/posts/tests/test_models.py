@@ -20,45 +20,46 @@ class PostModelTest(TestCase):
             author=cls.user,
             text='Тестовая группа',
         )
+        cls.group = PostModelTest.group
+        cls.post = PostModelTest.post
 
-    def test_models_have_correct_object_names(self):
-        """Проверяем, что у моделей корректно работает __str__."""
-        post = PostModelTest.post
-        group = PostModelTest.group
-
-        self.assertEqual(str(post), post.text[:15])
-        self.assertEqual(str(group), group.title)
-
-    def test_post_model_verbose_names(self):
-        """Проверяем, что у моделей корректно заданы verbose_names."""
-        post = PostModelTest.post
-
-        verbose_names = {
+        cls.verbose_names = {
             'text': 'Текст поста',
             'pub_date': 'Дата публикации',
             'author': 'Автор',
             'group': 'Группа',
         }
 
-        for value, expected in verbose_names.items():
+        cls.help_texts = {
+            'text': 'Введите текст поста',
+            'group': 'Выберите группу',
+        }
+
+        cls.post_str = cls.post.text[:15]
+        cls.group_str = cls.group.title
+
+    def test_models_have_correct_object_names(self):
+        """Проверяем, что у моделей корректно работает __str__."""
+
+        self.assertEqual(str(self.post), self.post_str)
+        self.assertEqual(str(self.group), self.group_str)
+
+    def test_post_model_verbose_names(self):
+        """Проверяем, что у моделей корректно заданы verbose_names."""
+
+        for value, expected in self.verbose_names.items():
             with self.subTest(value=value):
                 self.assertEqual(
-                    post._meta.get_field(value).verbose_name,
+                    self.post._meta.get_field(value).verbose_name,
                     expected
                 )
 
     def test_post_model_help_texts(self):
         """Проверяем, что у моделей корректно заданы help_texts."""
-        post = PostModelTest.post
 
-        help_texts = {
-            'text': 'Введите текст поста',
-            'group': 'Выберите группу',
-        }
-
-        for value, expected in help_texts.items():
+        for value, expected in self.help_texts.items():
             with self.subTest(value=value):
                 self.assertEqual(
-                    post._meta.get_field(value).help_text,
+                    self.post._meta.get_field(value).help_text,
                     expected
                 )
