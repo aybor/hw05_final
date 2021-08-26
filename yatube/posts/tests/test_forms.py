@@ -22,17 +22,22 @@ class PostCreateFormTests(TestCase):
         super().setUpClass()
 
         cls.user_username = 'auth'
+
         cls.test_title_group1 = 'Тестовая группа'
         cls.test_slug_group1 = 'test_slug'
         cls.test_description_group1 = 'Тестовое описание'
+
         cls.test_title_group2 = 'Тестовая группа для формы'
         cls.test_slug_group2 = 'test_slug_form'
         cls.test_description_group2 = 'Тестовое описание для формы'
+
         cls.test_text = 'Тестовый текст'
         cls.test_form_text = 'Тестовый тескт для формы'
         cls.corrected_form_text = 'Исправленный текст'
         cls.guest_form_text = 'Тескт для гостевого клиента'
         cls.test_comment_text = 'Тестовый комментарий'
+
+        cls.comment_obj_name = 'comments'
 
         cls.user = User.objects.create_user(username=cls.user_username)
 
@@ -118,11 +123,8 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        # Проверяем, что произошел правильный редирект
         self.assertRedirects(response, self.after_create_url)
-        # Проверяем, что постов стало на 1 больше
         self.assertEqual(Post.objects.count(), posts_count + 1)
-        # Проверяем, что создан пост с правильными данными
         self.assertTrue(
             Post.objects.filter(
                 text=self.test_form_text,
@@ -130,7 +132,6 @@ class PostCreateFormTests(TestCase):
                 author=self.user,
             ).exists()
         )
-        # Проверяем, что пост не отностся ко второй группе
         self.assertFalse(
             Post.objects.filter(
                 text=self.test_form_text,
@@ -141,7 +142,6 @@ class PostCreateFormTests(TestCase):
     def test_post_edit(self):
         """Проверка возможности изменения поста."""
         posts_count = Post.objects.count()
-        # Будем одновременно менять текст и группу
         form_data = {
             'text': self.corrected_form_text,
             'group': self.group2.id
@@ -151,11 +151,8 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        # Проверяем, что произошел правильный редирект
         self.assertRedirects(response, self.post_detail_url)
-        # Проверяем, что количество постов не изменилось
         self.assertEqual(Post.objects.count(), posts_count)
-        # Проверяем, что данные изменены правильно
         self.assertTrue(
             Post.objects.filter(
                 text=self.corrected_form_text,
@@ -168,25 +165,20 @@ class PostCreateFormTests(TestCase):
         """Проверка невозможности создания поста неавторизованным
         клиентом.
         """
-        # считаем количество постов
         posts_count = Post.objects.count()
-        # создаём данные формы
         form_data = {
             'text': self.guest_form_text,
             'group': self.group1.id,
         }
-        # делаем POST запрос от имени неавторизованного пользователя
         response = self.guest_client.post(
             self.post_create_url,
             data=form_data,
             follow=True
         )
-        # Проверяем, что произошел редирект на страницу входа
         self.assertRedirects(
             response,
             self.login_url + self.add_next_create
         )
-        # Проверяем, что количество постов не изменилось
         self.assertEqual(Post.objects.count(), posts_count)
 
     def test_add_comment(self):
@@ -198,24 +190,19 @@ class PostCreateFormTests(TestCase):
         form_data = {
             'text': self.test_comment_text
         }
-        # Делаем POST запрос от имени авторизованного пользователя
         response = self.authorized_client.post(
             self.comment_url,
             data=form_data,
             follow=True
         )
-        # Проверяем, что произошел правильный редирект
         self.assertRedirects(
             response,
             self.post_detail_url
         )
-        # Проверяем, что количество постов не изменилось
         self.assertEqual(Post.objects.count(), posts_count)
-        # Проверяем, что количество комментов изменилось
         self.assertEqual(Comment.objects.count(), comments_count + 1)
-        # Проверяем, что комментарий появляется на странице поста
         self.assertEqual(
-            response.context['comments'][0].text,
+            response.context[self.comment_obj_name][0].text,
             self.test_comment_text
         )
 
@@ -228,19 +215,14 @@ class PostCreateFormTests(TestCase):
         form_data = {
             'text': self.test_comment_text
         }
-        # Делаем POST запрос от имени неавторизованного пользователя
         response = self.guest_client.post(
             self.comment_url,
             data=form_data,
             follow=True
         )
-        # Проверяем, что произошел редирект на страницу входа
         self.assertRedirects(
             response,
             self.login_url + self.add_next_comment
         )
-        # Проверяем, что количество постов не изменилось
         self.assertEqual(Post.objects.count(), posts_count)
-
-        # Проверяем, что количество комментов не изменилось
         self.assertEqual(Comment.objects.count(), comments_count)

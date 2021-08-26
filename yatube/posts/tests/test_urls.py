@@ -13,12 +13,6 @@ User = get_user_model()
 class PostsURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
-        """Создаём пользователей:
-            1) автор поста;
-            2) просто ползователь.
-           Создаём тестовую группу.
-           В тестовой группе создаём пост.
-        """
         super().setUpClass()
 
         author_username = 'auth'
@@ -150,17 +144,14 @@ class PostsURLTests(TestCase):
         }
 
     def setUp(self):
-        """Создаём три клиента: не авторизованный, авторизованный
-        и атворизованный автор поста.
-        """
-        # не авторизованный пользователь
         self.guest_client = Client()
-        # авторизованный пользователь, не автор поста
+
         self.authorized_client = Client()
         self.authorized_client.force_login(PostsURLTests.user)
-        # авторизованный пользователь, автор поста
+
         self.authorized_client_author = Client()
         self.authorized_client_author.force_login(PostsURLTests.user_author)
+
         cache.clear()
 
     def test_urls_exists_for_authorized_client_author(self):

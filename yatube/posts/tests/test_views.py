@@ -45,7 +45,6 @@ class PostsPagesTests(TestCase):
 
         picture_name = 'small.gif'
         picture_content_type = 'image/gif'
-
         cls.small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
             b'\x01\x00\x80\x00\x00\x00\x00\x00'
@@ -59,7 +58,7 @@ class PostsPagesTests(TestCase):
             content=cls.small_gif,
             content_type=picture_content_type
         )
-        
+
         cls.user = User.objects.create_user(username=cls.user_username)
         cls.user2 = User.objects.create_user(username=cls.user2_username)
 
@@ -69,7 +68,6 @@ class PostsPagesTests(TestCase):
             description=cls.test_group_description,
         )
 
-        # Создаём 14 постов без группы, со случайным временем
         posts = [
             Post(
                 author=cls.user,
@@ -79,7 +77,6 @@ class PostsPagesTests(TestCase):
             for i in range(14)
         ]
 
-        # Добавляем 14 постов с группой, со случайным временем, с картинкой
         posts.extend(
             [
                 Post(
@@ -91,17 +88,12 @@ class PostsPagesTests(TestCase):
                 ) for i in range(14)
             ]
         )
-
-        # Добавляем 1 пост без группы, c другим пользователем,
-        # с автодобавлением времени
         posts.append(
             Post(
                 author=cls.user2,
                 text=cls.test_post_text,
             )
         )
-
-        # Записываем посты в базу
         Post.objects.bulk_create(posts)
 
         cls.first_page_index_post_cnt = 10
@@ -125,11 +117,11 @@ class PostsPagesTests(TestCase):
 
         post_detail_url = reverse(
             'posts:post_detail',
-            kwargs={'post_id': '1'}
+            kwargs={'post_id': 1}
         )
         post_edit_url = reverse(
             'posts:post_edit',
-            kwargs={'post_id': '1'}
+            kwargs={'post_id': 1}
         )
 
         cls.login_url = reverse('users:login')
@@ -176,7 +168,6 @@ class PostsPagesTests(TestCase):
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
-        """Создаём авторизованного и неавторизованного клиента."""
 
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
@@ -197,9 +188,7 @@ class PostsPagesTests(TestCase):
         количество постов на страницу;
         2) на страницах правильный контекст;
         3) посты на страницах отсортированы по возрастанию даты добавления.
-        Всего три страницы: 10, 10 и 9 постов.
         """
-        # запоминаем содержание страниц
         first_page = self.authorized_client.get(self.index_url)
         second_page = self.authorized_client.get(
             self.index_url + self.add_second_page_url
@@ -216,7 +205,6 @@ class PostsPagesTests(TestCase):
 
         for page, length in pages.items():
             with self.subTest(page=page):
-                # проверяем правильность работы пагинатора
                 self.assertEqual(
                     len(page.context[self.page_obj_name]),
                     length
@@ -224,16 +212,10 @@ class PostsPagesTests(TestCase):
                 for number in range(length):
                     with self.subTest(number=number):
                         post = page.context[self.page_obj_name][number]
-
-                        # проверяем правильность автора
-                        # в каждом посте на странице
                         self.assertIn(
                             post.author.username,
                             (self.user_username, self.user2_username)
                         )
-
-                        # проверяем правильность указания группы
-                        # при её наличии, текста поста для группы и картинки
                         if post.group:
                             self.assertEqual(
                                 post.group.title,
@@ -248,12 +230,9 @@ class PostsPagesTests(TestCase):
                                 Post.objects.get(pk=post.pk).image
                             )
                         else:
-
-                            # проверяем текст поста без группы
                             self.assertEqual(post.text, self.test_post_text)
 
                 for number in range(length - 1):
-                    # проверяем, что посты на странице отсортированы по дате
                     with self.subTest(number=number):
                         self.assertGreaterEqual(
                             page.context[
@@ -270,7 +249,6 @@ class PostsPagesTests(TestCase):
         количество постов на страницу;
         2) на страницах правильный контекст;
         3) посты на страницах отсортированы по возрастанию даты добавления.
-        Всего три страницы: 10, 10 и 9 постов.
         4) выведены только посты с указанной группой
         """
 
@@ -286,20 +264,14 @@ class PostsPagesTests(TestCase):
 
         for page, length in pages.items():
             with self.subTest(page=page):
-                # проверяем правильность работы пагинатора
                 self.assertEqual(len(page.context[self.page_obj_name]), length)
                 for number in range(length):
                     with self.subTest(number=number):
                         post = page.context[self.page_obj_name][number]
-                        # проверяем правильность автора
-                        # в каждом посте на странице
                         self.assertEqual(
                             post.author.username,
                             self.user_username
                         )
-
-                        # проверяем, что выведены только посты группы,
-                        # правильность текста, правильность картинки
                         self.assertEqual(
                             post.group.title,
                             self.test_group_title
@@ -314,7 +286,6 @@ class PostsPagesTests(TestCase):
                         )
 
                 for number in range(length - 1):
-                    # проверяемб что посты на странице отсортированы по дате
                     with self.subTest(number=number):
                         self.assertGreaterEqual(
                             page.context[
@@ -331,7 +302,6 @@ class PostsPagesTests(TestCase):
         количество постов на страницу;
         2) на страницах правильный контекст;
         3) посты на страницах отсортированы по возрастанию даты добавления.
-        Всего три страницы: 10, 10 и 9 постов;
         4) выведены только посты автора auth
         """
         # запоминаем содержание страниц
@@ -353,20 +323,14 @@ class PostsPagesTests(TestCase):
 
         for page, length in pages.items():
             with self.subTest(page=page):
-                # проверяем правильность работы пагинатора
                 self.assertEqual(len(page.context[self.page_obj_name]), length)
                 for number in range(length):
                     with self.subTest(number=number):
                         post = page.context[self.page_obj_name][number]
-                        # проверяем правильность автора
-                        # в каждом посте на странице
                         self.assertEqual(
                             post.author.username,
                             self.user_username
                         )
-
-                        # проверяем правильность указания группы
-                        # при её наличии, текста поста для группы, картинки
                         if post.group:
                             self.assertEqual(
                                 post.group.title,
@@ -382,11 +346,9 @@ class PostsPagesTests(TestCase):
                             )
 
                         else:
-                            # проверяем текст поста без группы
                             self.assertEqual(post.text, self.test_post_text)
 
                 for number in range(length - 1):
-                    # проверяемб что посты на странице отсортированы по дате
                     with self.subTest(number=number):
                         self.assertGreaterEqual(
                             page.context[
@@ -499,20 +461,17 @@ class PostsPagesTests(TestCase):
 
         page = self.authorized_client.get(self.post_create_url)
 
-        # проверяем правильность полей
         for value, expected in form_fields.items():
             with self.subTest(value=value):
                 form_field = page.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
 
-        # создаём ещё одноу группу
         yet_another_group = Group.objects.create(
             title=self.additional_group_title,
             slug=self.additional_group_slug,
             description=self.additional_group_description
         )
 
-        # создаём ещё один пост от в новой группе
         yet_another_post = Post.objects.create(
             author=self.user,
             text=self.additional_post_text,
@@ -520,7 +479,6 @@ class PostsPagesTests(TestCase):
             pub_date=random_time(),
         )
 
-        # проверяем, что пост отображается по своему id
         post_page = self.authorized_client.get(
             reverse(
                 'posts:post_detail',
@@ -548,8 +506,6 @@ class PostsPagesTests(TestCase):
             )
         )
 
-        # проверяем, что пост отображается первым на
-        # главной странице, странице пользователя и странице группы
         for page in main_page, group_page, user_page:
             with self.subTest(page=page):
                 self.assertEqual(
@@ -557,7 +513,6 @@ class PostsPagesTests(TestCase):
                     yet_another_post
                 )
 
-        # проверяем, что пост не попал в другую группу
         self.assertNotIn(yet_another_post, self.group.posts.all())
 
     def test_index_cache(self):
@@ -632,21 +587,13 @@ class PostsPagesTests(TestCase):
         )
 
     def test_post_of_followed_user_is_visible_for_follower(self):
-        # user подписывается на user2
         self.authorized_client.post(self.follow_url, follow=True)
-        # Запрашиваем страницу избранных авторов
         follower_page = self.authorized_client.get(self.follow_index_url)
-        # Проверяем, что пост на странице с избранными авторами принадлежит
-        # user2
         self.assertEqual(
             follower_page.context[self.page_obj_name][0].author,
             self.user2
         )
 
-        # user отписывается от user2
         self.authorized_client.post(self.unfollow_url, follow=True)
-        # Запрашиваем страницу избранных авторов
         follower_page = self.authorized_client.get(self.follow_index_url)
-        # Проверяем, что посты на страницу не выводятся,
-        # т.к. подписок больше нет
         self.assertFalse(len(follower_page.context[self.page_obj_name]))

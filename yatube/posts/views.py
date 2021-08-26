@@ -10,9 +10,8 @@ from .utils import pagination
 
 @cache_page(20, key_prefix="index_page")
 def index(request):
-    """Функция генерирует наполнение главной страницы."""
     template = 'posts/index.html'
-    post_list = Post.objects.all()
+    post_list = Post.objects.select_related('group').all()
     page_obj = pagination(request, post_list)
     context = {
         'page_obj': page_obj,
@@ -21,7 +20,6 @@ def index(request):
 
 
 def group_posts(request, slug):
-    """Функция генерирует наполнение страницы сообщества."""
     template = 'posts/group_list.html'
     group = get_object_or_404(Group, slug=slug)
     post_list = group.posts.all()
@@ -34,7 +32,6 @@ def group_posts(request, slug):
 
 
 def profile(request, username):
-    """Генерирует наполнение страницы с постами пользователя."""
     template = 'posts/profile.html'
     author = get_object_or_404(User, username=username)
     post_list = author.posts.all()
@@ -57,7 +54,6 @@ def profile(request, username):
 
 
 def post_view(request, post_id):
-    """Генерирует наполнения страницы отдельного поста."""
     template = 'posts/post_view.html'
     post = get_object_or_404(Post, id=post_id)
     author_posts_cnt = post.author.posts.count()
@@ -74,7 +70,6 @@ def post_view(request, post_id):
 
 @login_required
 def post_create(request):
-    """Страница для создания поста."""
     template = 'posts/create_post.html'
 
     form = PostForm(request.POST or None)
@@ -96,7 +91,6 @@ def post_create(request):
 
 @login_required
 def post_edit(request, post_id):
-    """Страница для изменения поста."""
     template = 'posts/create_post.html'
     is_edit = True
     post = get_object_or_404(Post, id=post_id)
@@ -155,7 +149,6 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    # Предотвращение подписки на себя
     if request.user.username == username:
         return redirect(
             reverse(
@@ -163,9 +156,7 @@ def profile_follow(request, username):
                 kwargs={'username': username}
             )
         )
-    # Находим в базе на кого подписываемся
     author = get_object_or_404(User, username=username)
-    # Если ещё не подписаны - подписываемся
     Follow.objects.get_or_create(
         user=request.user,
         author=author
@@ -180,15 +171,12 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    # Находим в базе автора
     author = get_object_or_404(User, username=username)
-    # Находим соответствующую подписку
     follow = get_object_or_404(
         Follow,
         author=author,
         user=request.user
     )
-    # Удаляем подписку
     follow.delete()
     return redirect(
         reverse(

@@ -12,26 +12,32 @@ class AboutURLViewsTests(TestCase):
     def setUpClass(cls):
         """Создаём пользователя."""
         super().setUpClass()
-        cls.user = User.objects.create_user(username='user')
+
+        user_username = 'user'
+        cls.user = User.objects.create_user(username=user_username)
+
+        about_author_url = reverse('about:author')
+        about_author_template = 'about/author.html'
+
+        about_tech_url = reverse('about:tech')
+        about_tech_template = 'about/tech.html'
 
         cls.addresses = {
-            reverse('about:author'): {
+            about_author_url: {
                 'status': HTTPStatus.OK,
-                'template': 'about/author.html'
+                'template': about_author_template
             },
-            reverse('about:tech'): {
+            about_tech_url: {
                 'status': HTTPStatus.OK,
-                'template': 'about/tech.html'
+                'template': about_tech_template
             },
         }
 
     def setUp(self):
-        """Создаём не авторизованный клиент."""
-        # не авторизованный пользователь
         self.guest_client = Client()
 
     def test_about_pages_exists_and_templates(self):
-        """Проверяем доступность и тесплейты страниц about/"""
+        """Проверяем доступность и темплейты страниц about"""
         for address, data in self.addresses.items():
             with self.subTest(address=address):
                 response = self.guest_client.get(address)

@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
+from django.urls.base import reverse
 
 User = get_user_model()
 
@@ -9,34 +10,47 @@ User = get_user_model()
 class UsersURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
-        """Создаём пользователя."""
         super().setUpClass()
         cls.user = User.objects.create_user(username='user')
 
+        logout_url = reverse('users:logout')
+        signup_url = reverse('users:signup')
+        login_url = reverse('users:login')
+        password_change_url = reverse('users:password_change')
+        password_change_done_url = reverse('users:password_change_done')
+        password_reset_url = reverse('users:password_reset')
+        password_reset_done_url = reverse('users:password_reset_done')
+        password_reset_complete_url = reverse('users:password_reset_complete')
+
+        cls.urls_for_guest = {
+            password_change_url:
+            f'{login_url}?next={password_change_url}',
+
+            password_change_done_url:
+            f'{login_url}?next={password_change_done_url}',
+        }
+
+        cls.urls_for_authorized = {
+            signup_url: 'users/signup.html',
+            login_url: 'users/login.html',
+            password_change_url: 'users/password_change.html',
+            password_change_done_url: 'users/password_change_done.html',
+            password_reset_url: 'users/password_reset_form.html',
+            password_reset_done_url: 'users/password_reset_done.html',
+            password_reset_complete_url: 'users/password_reset_complete.html',
+            logout_url: 'users/logged_out.html',
+        }
+
     def setUp(self):
-        """Создаём не авторизованный и авторизованный клиенты."""
-        # не авторизованный пользователь
         self.guest_client = Client()
-        # авторизованный пользователь, не автор поста
+
         self.authorized_client = Client()
         self.authorized_client.force_login(UsersURLTests.user)
 
     def test_urls_exists_and_template_is_correct(self):
         """Проверяем доступность страниц и правильность шаблонов.
         """
-
-        urls_for_authorized = {
-            '/auth/signup/': 'users/signup.html',
-            '/auth/login/': 'users/login.html',
-            '/auth/password_change/': 'users/password_change.html',
-            '/auth/password_change/done/': 'users/password_change_done.html',
-            '/auth/password_reset/': 'users/password_reset_form.html',
-            '/auth/password_reset/done/': 'users/password_reset_done.html',
-            '/auth/reset/done/': 'users/password_reset_complete.html',
-            '/auth/logout/': 'users/logged_out.html',
-        }
-
-        for address, template in urls_for_authorized.items():
+        for address, template in self.urls_for_authorized.items():
             with self.subTest(address=address):
                 response = self.authorized_client.get(address)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -46,15 +60,8 @@ class UsersURLTests(TestCase):
         """Проверяем, что гостевой клиент перенаправляется на страницу входа
         при попытке смены пароля.
         """
-        urls_for_guest = {
-            '/auth/password_change/':
-            '/auth/login/?next=/auth/password_change/',
 
-            '/auth/password_change/done/':
-            '/auth/login/?next=/auth/password_change/done/',
-        }
-
-        for address, redirected in urls_for_guest.items():
+        for address, redirected in self.urls_for_guest.items():
             with self.subTest(address=address):
                 response = self.guest_client.get(address, follow=True)
                 self.assertRedirects(response, redirected)

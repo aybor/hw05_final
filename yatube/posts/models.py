@@ -15,9 +15,6 @@ class Group(models.Model):
 
 
 class Post(models.Model):
-    """Класс описывает посты, могут относиться
-    или не относиться к сообществам.
-    """
     text = models.TextField(
         'Текст поста',
         help_text='Введите текст поста'
@@ -61,7 +58,6 @@ class Post(models.Model):
 
 
 class Comment(models.Model):
-    """Комментарии к постам."""
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
@@ -91,14 +87,11 @@ class Comment(models.Model):
 
 
 class Follow(models.Model):
-    """Модель подписки."""
-    # Тот, кто подписывается
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='follower',
     )
-    # Тот, на кого подписываются
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
