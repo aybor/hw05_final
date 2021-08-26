@@ -516,10 +516,8 @@ class PostsPagesTests(TestCase):
         # Проверяем, что текст страницы изменился
         self.assertNotEqual(new_page_2, cached_new_page)
 
-    def test_authorized_user_can_follow_and_unfollow(self):
-        """Проверка возможности подписки и отписки авторизованным
-        пользователем.
-        """
+    def test_authorized_user_can_follow(self):
+        """Проверка возможности подписки авторизованным пользователем."""
         # Проверяем возможность подписки
         follow_count = Follow.objects.count()
         # Подписываемся авторизованным пользователем на user2
@@ -535,12 +533,17 @@ class PostsPagesTests(TestCase):
                 author=self.user2
             ).exists()
         )
+
+    def test_authorized_user_can_unfollow(self):
+        """Проверка возможности отписки авторизованным пользователем."""
+        Follow.objects.create(user=self.user, author=self.user2)
+        follow_count = Follow.objects.count()
         # Отписываемся от user2
         response = self.authorized_client.post(self.unfollow_url, follow=True)
         # Проверяем редирект
         self.assertRedirects(response, self.user2_url)
         # Проверяем, что подписок стало меньше
-        self.assertEqual(Follow.objects.count(), follow_count)
+        self.assertEqual(Follow.objects.count(), follow_count - 1)
         # Проверяем, что подписка с правильными полями исчезла
         self.assertFalse(
             Follow.objects.filter(

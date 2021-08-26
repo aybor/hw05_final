@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse
-from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from django.views.decorators.cache import cache_page
+
 from .forms import CommentForm, PostForm
 from .models import Follow, Group, Post, User
+from .utils import pagination
 
 
 @cache_page(20, key_prefix="index_page")
@@ -144,7 +145,7 @@ def add_comment(request, post_id):
 def follow_index(request):
     template = 'posts/index.html'
     user = request.user
-    post_list = Post.objects.filter(author__following__user=user).all()
+    post_list = Post.objects.filter(author__following__user=user)
     page_obj = pagination(request, post_list)
     context = {
         'page_obj': page_obj
@@ -164,18 +165,11 @@ def profile_follow(request, username):
         )
     # Находим в базе на кого подписываемся
     author = get_object_or_404(User, username=username)
-    # Проверяем, нет ли уже на него подписки
-    already_follow = Follow.objects.filter(
+    # Если ещё не подписаны - подписываемся
+    Follow.objects.get_or_create(
         user=request.user,
         author=author
-    ).exists()
-    # Если ещё не подписаны - подписываемся
-    if not already_follow:
-        Follow.objects.create(
-            user=request.user,
-            author=author
-        )
-    # Перенаправлемся на страницу автора
+    )
     return redirect(
         reverse(
             'posts:profile',
@@ -202,11 +196,3 @@ def profile_unfollow(request, username):
             kwargs={'username': username}
         )
     )
-
-
-def pagination(request, post_list):
-    """Разбивает список постов post_list на страницы по 10 штук"""
-    paginator = Paginator(post_list, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    return page_obj

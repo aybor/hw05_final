@@ -1,12 +1,14 @@
 import shutil
 import tempfile
-from django.test import Client, TestCase, override_settings
-from django.urls import reverse
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from posts.forms import PostForm
+from django.test import Client, TestCase, override_settings
+from django.urls import reverse
+
 from posts.models import Post, Group, Comment
+from posts.forms import PostForm
 
 User = get_user_model()
 
@@ -37,6 +39,45 @@ class PostCreateFormTests(TestCase):
         )
         cls.form = PostForm()
 
+        cls.small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+
+        cls.uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=cls.small_gif,
+            content_type='image/gif'
+        )
+
+        cls.test_form_text = 'Тестовый тескт для формы'
+        cls.corrected_form_text = 'Исправленный текст'
+        cls.guest_form_text = 'Тескт для гостевого клиента'
+        cls.test_comment_text = 'Тестовый комментарий'
+
+        cls.post_create_url = reverse('posts:post_create')
+        cls.after_create_url = reverse(
+            'posts:profile',
+            kwargs={'username': cls.user}
+        )
+        cls.post_edit_url = reverse(
+            'posts:post_edit',
+            kwargs={'post_id': 1}
+        )
+        cls.post_detail_url = reverse(
+            'posts:post_detail',
+            kwargs={'post_id': 1}
+        )
+        cls.login_url = reverse('users:login')
+        cls.comment_url = reverse('posts:add_comment', kwargs={'post_id': 1})
+
+        cls.add_next_create = '?next=/create/'
+        cls.add_next_comment = '?next=/posts/1/comment/'
+
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
@@ -54,43 +95,24 @@ class PostCreateFormTests(TestCase):
         """Проверка возможности создания поста с картинкой."""
 
         posts_count = Post.objects.count()
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=small_gif,
-            content_type='image/gif'
-        )
         form_data = {
-            'text': 'Тестовый тескт для формы',
+            'text': self.test_form_text,
             'group': self.group2.id,
-            'image': uploaded
+            'image': self.uploaded
         }
         response = self.authorized_client.post(
-            reverse('posts:post_create'),
+            self.post_create_url,
             data=form_data,
             follow=True
         )
         # Проверяем, что произошел правильный редирект
-        self.assertRedirects(
-            response,
-            reverse(
-                'posts:profile',
-                kwargs={'username': self.user}
-            )
-        )
+        self.assertRedirects(response, self.after_create_url)
         # Проверяем, что постов стало на 1 больше
         self.assertEqual(Post.objects.count(), posts_count + 1)
         # Проверяем, что создан пост с правильными данными
         self.assertTrue(
             Post.objects.filter(
-                text='Тестовый тескт для формы',
+                text=self.test_form_text,
                 group=self.group2,
                 author=self.user,
             ).exists()
@@ -98,7 +120,7 @@ class PostCreateFormTests(TestCase):
         # Проверяем, что пост не отностся ко второй группе
         self.assertFalse(
             Post.objects.filter(
-                text='Тестовый тескт для формы',
+                text=self.test_form_text,
                 group=self.group1,
             ).exists()
         )
@@ -108,28 +130,22 @@ class PostCreateFormTests(TestCase):
         posts_count = Post.objects.count()
         # Будем одновременно менять текст и группу
         form_data = {
-            'text': 'Исправленный текст',
+            'text': self.corrected_form_text,
             'group': self.group2.id
         }
         response = self.authorized_client.post(
-            reverse('posts:post_edit', kwargs={'post_id': 1}),
+            self.post_edit_url,
             data=form_data,
             follow=True
         )
         # Проверяем, что произошел правильный редирект
-        self.assertRedirects(
-            response,
-            reverse(
-                'posts:post_detail',
-                kwargs={'post_id': 1}
-            )
-        )
+        self.assertRedirects(response, self.post_detail_url)
         # Проверяем, что количество постов не изменилось
         self.assertEqual(Post.objects.count(), posts_count)
         # Проверяем, что данные изменены правильно
         self.assertTrue(
             Post.objects.filter(
-                text='Исправленный текст',
+                text=self.corrected_form_text,
                 group=self.group2.id,
                 author=self.user,
             )
@@ -143,19 +159,19 @@ class PostCreateFormTests(TestCase):
         posts_count = Post.objects.count()
         # создаём данные формы
         form_data = {
-            'text': 'Тестовый тескт для гостевого клиента',
+            'text': self.guest_form_text,
             'group': self.group1.id,
         }
         # делаем POST запрос от имени неавторизованного пользователя
         response = self.guest_client.post(
-            reverse('posts:post_create'),
+            self.post_create_url,
             data=form_data,
             follow=True
         )
         # Проверяем, что произошел редирект на страницу входа
         self.assertRedirects(
             response,
-            reverse('users:login') + '?next=/create/'
+            self.login_url + self.add_next_create
         )
         # Проверяем, что количество постов не изменилось
         self.assertEqual(Post.objects.count(), posts_count)
@@ -167,21 +183,18 @@ class PostCreateFormTests(TestCase):
         comments_count = Comment.objects.count()
         posts_count = Post.objects.count()
         form_data = {
-            'text': 'Тестовый комментарий'
+            'text': self.test_comment_text
         }
         # Делаем POST запрос от имени авторизованного пользователя
         response = self.authorized_client.post(
-            reverse('posts:add_comment', kwargs={'post_id': 1}),
+            self.comment_url,
             data=form_data,
             follow=True
         )
         # Проверяем, что произошел правильный редирект
         self.assertRedirects(
             response,
-            reverse(
-                'posts:post_detail',
-                kwargs={'post_id': 1}
-            )
+            self.post_detail_url
         )
         # Проверяем, что количество постов не изменилось
         self.assertEqual(Post.objects.count(), posts_count)
@@ -190,7 +203,7 @@ class PostCreateFormTests(TestCase):
         # Проверяем, что комментарий появляется на странице поста
         self.assertEqual(
             response.context['comments'][0].text,
-            'Тестовый комментарий'
+            self.test_comment_text
         )
 
     def test_not_add_comment_for_guest_client(self):
@@ -200,18 +213,18 @@ class PostCreateFormTests(TestCase):
         comments_count = Comment.objects.count()
         posts_count = Post.objects.count()
         form_data = {
-            'text': 'Тестовый комментарий'
+            'text': self.test_comment_text
         }
         # Делаем POST запрос от имени неавторизованного пользователя
         response = self.guest_client.post(
-            reverse('posts:add_comment', kwargs={'post_id': 1}),
+            self.comment_url,
             data=form_data,
             follow=True
         )
         # Проверяем, что произошел редирект на страницу входа
         self.assertRedirects(
             response,
-            reverse('users:login') + '?next=/posts/1/comment/'
+            self.login_url + self.add_next_comment
         )
         # Проверяем, что количество постов не изменилось
         self.assertEqual(Post.objects.count(), posts_count)
