@@ -7,8 +7,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from posts.models import Post, Group, Comment
 from posts.forms import PostForm
+from posts.models import Comment, Group, Post
 
 User = get_user_model()
 
