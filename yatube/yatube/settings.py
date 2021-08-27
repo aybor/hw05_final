@@ -25,7 +25,13 @@ SECRET_KEY = '$-%s(!s-p$25bf9oq-tbocqrk+@=*)r!i*yky-&z^p%vfx-z$9'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'testserver'
+    'www.aybor.pythonanywhere.com',
+    'aybor.pythonanywhere.com',
+]
 
 INTERNAL_IPS = [
     '127.0.0.1',
