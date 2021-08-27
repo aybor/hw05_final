@@ -35,11 +35,12 @@
                   {% endfor %}
               {% endif %}
 
-              <form method="post" enctype="multipart/form-data"
+               <form method="post" enctype="multipart/form-data"
                 {% if action_url %}
                   action="{% url action_url %}"
                 {% endif %}
               >
+              
               {% csrf_token %}
 
               {# Выводим поля в цикле, по отдельности #}

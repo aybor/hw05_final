@@ -147,10 +147,10 @@ class PostsURLTests(TestCase):
         self.guest_client = Client()
 
         self.authorized_client = Client()
-        self.authorized_client.force_login(PostsURLTests.user)
+        self.authorized_client.force_login(self.user)
 
         self.authorized_client_author = Client()
-        self.authorized_client_author.force_login(PostsURLTests.user_author)
+        self.authorized_client_author.force_login(self.user_author)
 
         cache.clear()
 
