@@ -146,6 +146,13 @@ LOGIN_REDIRECT_URL = 'posts:index'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
 
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.mail.ru'
+# EMAIL_HOST_USER = 'podderzhka.aybor.yatube@internet.ru'
+# EMAIL_HOST_PASSWORD = 'X7Z7AiFwCJRper7WVOxe'
+# EMAIL_PORT = 465
+# EMAIL_USE_TLS = True
+
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 MEDIA_URL = '/media/'
