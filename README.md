@@ -1,3 +1,44 @@
-# hw05_final
+# Проект социальной сети Yatube
+## Описание
+Проект показывает, как может вгылядеть соцсеть для публикации постов, написанная полностью с использованием Python и Django.
+<br><br>
+Реализовано управление пользователями:
+ - Регистрация
+ - Авторизация
+ - Сброс пароля
+<br><br>
 
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
+Пользователи имеют возможность:
+ - Публиковать посты (с привязкой к группе или без)
+ - Добавлять авторов постов в избранное
+ - Комментировать посты
+ - Добавлять к постам изображения
+ - Фильтровать посты по принадлежности к автору, группе или избранным авторам
+
+## Установка
+1. Клонировать репозиторий
+```
+git clone https://github.com/aybor/hw05_final.git
+```
+2. Установить зависимости
+```
+pip install -r requirements.txt
+```
+3. Создать миграции
+```
+python yatube/manage.py makemigrations
+```
+4. Применить миграции
+```
+python yatube/manage.py migrate
+```
+5. Создать суперпользователя (Для доступа в админку сайта)
+```
+python yatube/manage.py createsuperuser
+```
+И проследовать ниструкциям по созданию суперпользователя
+
+6. Запустить проект на локальном ПК
+```
+python yatube/manage.py runserver
+```
